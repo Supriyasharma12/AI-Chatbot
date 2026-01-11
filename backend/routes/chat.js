@@ -61,7 +61,6 @@ const UserMemory = require("../models/UserMemory");
 // const { getOpenAIReply } = require("../services/openaiService");
 const { getLlamaReply } = require("../services/ollamaService");
 
-
 router.post("/", async (req, res) => {
   try {
     console.log(" /chat hit");
@@ -87,7 +86,30 @@ router.post("/", async (req, res) => {
       tone: "empathetic",
     });
 
+    // MEMORY EXTRACTION (KEY PART)
+    let updatedMemory = memory.memorySummary || "";
+
+    // ONLY store explicit factual statements
+const factPatterns = [
+  /^(my name is|i am|i'm)\s+/i,
+  /^[A-Z][a-z]+ (loves|likes|plays|enjoys|is)\b/i
+];
+
+if (factPatterns.some(p => p.test(message))) {
+  updatedMemory += ` ${message}.`;
+}
+
+
+    // keep memory short 
+    updatedMemory = updatedMemory.slice(-300);
+
+    // save memory
+    memory.memorySummary = updatedMemory;
+    memory.updatedAt = new Date();
+    await memory.save();
+
     res.json({ reply });
+
   } catch (err) {
     //  FORCE PRINT EVERYTHING to check
     console.error(" CHAT ROUTE ERROR ");
