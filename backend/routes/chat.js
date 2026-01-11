@@ -58,7 +58,9 @@
 const express = require("express");
 const router = express.Router();
 const UserMemory = require("../models/UserMemory");
-const { getOpenAIReply } = require("../services/openaiService");
+// const { getOpenAIReply } = require("../services/openaiService");
+const { getLlamaReply } = require("../services/ollamaService");
+
 
 router.post("/", async (req, res) => {
   try {
@@ -79,7 +81,7 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const reply = await getOpenAIReply({
+    const reply = await getLlamaReply({
       message,
       memorySummary: memory.memorySummary,
       tone: "empathetic",
