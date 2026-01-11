@@ -1,4 +1,5 @@
 async function getLlamaReply({ message, memorySummary, tone }) {
+
     const toneConfig = {
         supportive: "Be empathetic but brief.",
         neutral: "Answer directly in one sentence.",
@@ -7,25 +8,34 @@ async function getLlamaReply({ message, memorySummary, tone }) {
 
     const toneInstruction = toneConfig[tone] || toneConfig.neutral;
 
-    const prompt = `You are helpful AI assistant.
+    const prompt = `
+You are a calm, friendly, human-like assistant.
 
-    IMPORTANT MEMORY (USE THIS IF RELEVANT):
-${memorySummary || "No known facts yet."}
+CORE BEHAVIOR:
+- Be brief, clear, and natural
+- Answer like a real person would in chat
+- Stay focused on the user’s question
+- Do not volunteer unrelated information
 
-   STRICT RULES (DO NOT BREAK):
-- If the question can be answered using the memory above, answer using it
-- Do NOT say you don't know if memory contains the answer
-    - Keep response under 3 sentences
-    - No explanations unless asked
-    - Do not hallucinate facts
-    - If unsure, say you don't know
-    - No motivational speeches
-    - Sound natural and human
-    - Ask at most ONE short follow-up question 
+MEMORY RULES (IMPORTANT):
+- If the answer exists in memory, use it
+- Do not invent or guess facts
+- If memory does not contain the answer, say you’re not sure
 
-    Tone instruction:
+STYLE GUIDELINES:
+- Keep replies under 3 sentences
+- No lectures or explanations unless asked
+- No motivational speeches
+- Use simple, everyday language
+- You may acknowledge emotions briefly (once), only if relevant
+
+MEMORY:
+${memorySummary || "No stored memory"}
+
+Tone instruction:
 ${toneInstruction}
-    User question:
+
+User question:
 "${message}"
 
 Assistant:
@@ -35,13 +45,14 @@ Assistant:
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            model: "llama2:7b",
+            model: "mistral",
             prompt,
             stream: false,
             options: {
                 temperature: 0.3,   // less creativity
                 top_p: 0.85,
-                max_tokens: 50
+                max_tokens: 30,
+                num_ctx: 1024
             }     // HARD STOP
         })
     });
@@ -50,7 +61,7 @@ Assistant:
 
     if (!response.ok) {
         console.error("OLLAMA ERROR:", data);
-        throw new Error("Failed to get response from LLaMA-2");
+        throw new Error("Failed to get response from Ollama(Mistral");
     }
     return data.response.trim();
 }
